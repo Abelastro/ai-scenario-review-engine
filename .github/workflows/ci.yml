@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Test suite
+        run: pytest --cov=scenario_review --cov-report=term-missing
+      - name: Rule registry sanity
+        run: scenario-review rules | tail -n +2 | wc -l | grep -q "28" && echo "28 rules registered"
+      - name: Engine output regression (flawed scenario must be flagged)
+        run: |
+          scenario-review review examples/scenarios/flawed-checkout.yaml -f json -o /tmp/flawed.json
+          python -c "import json; d=json.load(open('/tmp/flawed.json')); assert d['totals']['high'] + d['totals']['critical'] >= 1, 'flawed scenario must produce findings'; print('flawed scenario OK:', d['totals'])"
+      - name: Engine output regression (clean scenario must stay clean)
+        run: |
+          scenario-review review examples/scenarios/clean-window-region.yaml -f json -o /tmp/clean.json
+          python -c "import json; d=json.load(open('/tmp/clean.json')); assert d['totals']['critical'] == 0 and d['totals']['high'] == 0, 'clean scenario must have no critical/high findings'; print('clean scenario OK:', d['totals'])"

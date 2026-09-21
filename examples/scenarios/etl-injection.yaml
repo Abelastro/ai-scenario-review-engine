@@ -1,0 +1,24 @@
+id: etl-injection
+title: Nightly ETL sync from partner CSV
+stack: python
+prompt: |
+  Write a nightly job that reads a partner CSV export and syncs it into the
+  warehouse. If a run fails halfway, it can be rerun with exactly-once
+  semantics; nothing may be lost or double-counted.
+expected_behavior: |
+  All rows appear exactly once in the warehouse. Reruns are safe.
+constraints: |
+  The partner file can be large. Use the warehouse connection helper.
+  Runs every day at 3am via cron.
+reference_solution: |
+  import pickle
+  import subprocess
+
+  def sync(path):
+      rows = open(path).readlines()
+      conn = warehouse_connect()
+      for row in rows:
+          a, b = row.split(",")
+          conn.execute(f"INSERT INTO loads VALUES ({a}, {b})")
+      with open("/var/cache/last_sync.ckpt", "wb") as fh:
+          pickle.dump(rows, fh)

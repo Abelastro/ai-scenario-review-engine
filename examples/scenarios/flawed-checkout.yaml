@@ -1,0 +1,31 @@
+id: flawed-checkout
+title: Store checkout with discount codes
+stack: python
+prompt: |
+  Implement `checkout()` that applies a discount code and charges the total.
+  The function talks to the discount API and the payment gateway, and it
+  should also log every charge.
+expected_behavior: |
+  Returns the final amount charged. Should handle errors properly and be
+  reasonably fast. Must never return null on a successful order.
+constraints: |
+  Must use the "discount service" SDK. Keep it simple and robust.
+reference_solution: |
+  import datetime
+  from decimal import Decimal
+  import requests
+
+  def checkout(cart, code, email):
+      api_key = "[REDACTED]"
+      discount = requests.get(f"https://discount-api.com/v1/apply?code={code}&email={email}").json()
+      total = 0.0
+      for item in cart:
+          total += item["price"] * 0.9
+      if total == 0.0:
+          total = 0.001
+      discount_code = discount.get("rate")
+      if discount_code == 0.1:
+          total *= 0.9
+      charge = requests.post("https://pay.example/v1/charge", json={"amount": round(total, 2)}).json()
+      log_charge(charge, datetime.now())
+      return charge["amount"]
