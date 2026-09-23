@@ -196,6 +196,14 @@ examples/scenarios/     flawed / partially flawed / clean showcase scenarios
 tests/                  pytest suite incl. golden regression on the examples
 ```
 
+## Quick reference
+
+- ``scenario-review init my-scenario`` — scaffold a new scenario YAML.
+- ``scenario-review review scenario.yaml -f md`` — review and print a report.
+- ``scenario-review rules`` — list all 28 rules and default severities.
+
+Exit codes: 0 no findings at/above the gate, 1 findings at/above the gate, 2 usage error.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
